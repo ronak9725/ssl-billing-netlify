@@ -1,0 +1,6 @@
+{
+  "name": "SSL Billing Web App GST",
+  "description": "GST billing and logistics invoicing platform for SHREE SANWARIYA LOGISTICS",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
