@@ -75,6 +75,29 @@ invoiceRouter.get('/invoices', requireModule('invoices'), async (req: Request, r
     const pageSize = parseInt(req.query.page_size as string, 10) || 20;
 
     let rows = await db.select('invoices', { order: `${sort}.${order}` });
+    
+    // Explicit secondary tie-break sort to guarantee newest invoices appear on top
+    rows.sort((a: any, b: any) => {
+      if (sort === 'invoice_date') {
+        const da = a.invoice_date || '';
+        const dbDate = b.invoice_date || '';
+        if (order === 'desc') {
+          if (da !== dbDate) return da > dbDate ? -1 : 1;
+          const ca = a.created_at || '';
+          const cb = b.created_at || '';
+          if (ca !== cb) return ca > cb ? -1 : 1;
+          return String(a.invoice_no || '') > String(b.invoice_no || '') ? -1 : 1;
+        } else {
+          if (da !== dbDate) return da < dbDate ? -1 : 1;
+          return (a.created_at || '') < (b.created_at || '') ? -1 : 1;
+        }
+      }
+      const va = a[sort] ?? '';
+      const vb = b[sort] ?? '';
+      if (order === 'desc') return va > vb ? -1 : va < vb ? 1 : 0;
+      return va > vb ? 1 : va < vb ? -1 : 0;
+    });
+
     const payments = await db.select('payments');
 
     const paidMap: Record<string, number> = {};

@@ -143,10 +143,18 @@ const handleDashboard = async (req: Request, res: Response) => {
       ...counts,
     };
 
-    // Format recent 5 invoices
-    const recent_invoices = invoices
-      .slice(-5)
-      .reverse()
+    // Format recent 5 invoices (sorted newest first)
+    const recent_invoices = [...invoices]
+      .sort((a: any, b: any) => {
+        const da = a.invoice_date || '';
+        const dbDate = b.invoice_date || '';
+        if (da !== dbDate) return da > dbDate ? -1 : 1;
+        const ca = a.created_at || '';
+        const cb = b.created_at || '';
+        if (ca !== cb) return ca > cb ? -1 : 1;
+        return String(a.invoice_no || '') > String(b.invoice_no || '') ? -1 : 1;
+      })
+      .slice(0, 5)
       .map((inv: any) => {
         const t = calc.compute(inv);
         const received = paidByInvoice[inv.id] || 0;

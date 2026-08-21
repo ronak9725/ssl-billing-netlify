@@ -35,8 +35,11 @@ function MainApp() {
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [editingInvoice, setEditingInvoice] = useState<Invoice | null>(null);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+  const [targetCustomerForInvoice, setTargetCustomerForInvoice] = useState<string | undefined>(undefined);
   const [targetInvoiceForPayment, setTargetInvoiceForPayment] = useState<Invoice | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [highlightInvoiceId, setHighlightInvoiceId] = useState<string | null>(null);
+  const [invoiceToastMessage, setInvoiceToastMessage] = useState<string | null>(null);
 
   // Company Settings & Default Bank
   const [companySettings, setCompanySettings] = useState<CompanySettings>({
@@ -168,6 +171,8 @@ function MainApp() {
               }}
               companySettings={companySettings}
               defaultBank={defaultBank}
+              highlightInvoiceId={highlightInvoiceId}
+              initialToastMessage={invoiceToastMessage}
             />
           )}
 
@@ -215,14 +220,27 @@ function MainApp() {
       {showInvoiceModal && (
         <InvoiceModal
           invoiceToEdit={editingInvoice}
+          initialCustomerId={targetCustomerForInvoice}
           onClose={() => {
             setShowInvoiceModal(false);
             setEditingInvoice(null);
+            setTargetCustomerForInvoice(undefined);
           }}
-          onSuccess={() => {
+          onSuccess={(savedInvoice) => {
             setShowInvoiceModal(false);
             setEditingInvoice(null);
+            setTargetCustomerForInvoice(undefined);
             setRefreshKey(k => k + 1);
+            setActiveTab('invoices');
+            if (savedInvoice) {
+              setHighlightInvoiceId(savedInvoice.id);
+              setInvoiceToastMessage(
+                `Invoice ${savedInvoice.invoice_no || ''} ${editingInvoice ? 'updated' : 'created'} successfully!`
+              );
+              setTimeout(() => {
+                setHighlightInvoiceId(null);
+              }, 4000);
+            }
           }}
         />
       )}
@@ -234,6 +252,7 @@ function MainApp() {
           onEditInvoice={(inv) => {
             setSelectedInvoice(null);
             setEditingInvoice(inv);
+            setTargetCustomerForInvoice(undefined);
             setShowInvoiceModal(true);
           }}
           onRecordPayment={(inv) => {
@@ -264,6 +283,7 @@ function MainApp() {
           onClose={() => setSelectedCustomer(null)}
           onNewInvoice={(cust) => {
             setSelectedCustomer(null);
+            setTargetCustomerForInvoice(cust.id);
             setShowInvoiceModal(true);
           }}
           companySettings={companySettings}
